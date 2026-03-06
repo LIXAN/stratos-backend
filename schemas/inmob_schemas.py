@@ -12,6 +12,9 @@ class ProyectoBase(BaseModel):
     tipo_inmueble: Optional[str] = "Apartamentos"
     zonas_sociales: Optional[Any] = None
     imagen_url: Optional[str] = None
+    telefono_contacto: Optional[str] = None
+    correo_contacto: Optional[str] = None
+    direccion: Optional[str] = None
     admin_id: Optional[UUID] = None
 
 class ProyectoCreate(ProyectoBase):

@@ -53,6 +53,9 @@ class Proyecto(BaseModel):
     tipo_inmueble = Column(String, default="Apartamentos")
     zonas_sociales = Column(JSON, nullable=True)
     imagen_url = Column(String, nullable=True)
+    telefono_contacto = Column(String, nullable=True)
+    correo_contacto = Column(String, nullable=True)
+    direccion = Column(String, nullable=True)
     admin_id = Column(UUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=True)
     
     torres = relationship("Torre", back_populates="proyecto")
