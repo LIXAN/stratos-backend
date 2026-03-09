@@ -71,12 +71,30 @@ def trigger_migrations():
         inspector = inspect(engine)
         tables = inspector.get_table_names()
         
-        # Si la tabla de proyectos/tipos existe pero no hay historial de alembic,
-        # significa que la BD es vieja y necesitamos sellarla en la versión inicial.
         out = ""
-        if "tipos_plantilla" in tables and "alembic_version" not in tables:
-            out += "Legacy database detected! Stamping initial schema (1be94bebf9c4)...\n"
-            stamp_res = subprocess.run(["alembic", "stamp", "1be94bebf9c4"], capture_output=True, text=True, check=True)
+        if "alembic_version" not in tables and "tipos_plantilla" in tables:
+            proyectos_cols = [c["name"] for c in inspector.get_columns("proyectos")] if "proyectos" in tables else []
+            tipos_cols = [c["name"] for c in inspector.get_columns("tipos_plantilla")] if "tipos_plantilla" in tables else []
+            
+            # Find the most advanced state the DB is currently in to avoid duplicates
+            target = "1be94bebf9c4"
+            if "telefono_contacto" in proyectos_cols:
+                target = "1ac7fc54f1ae"
+            elif "empleados" in tables:
+                target = "858cb3bd6a96"
+            elif "imagen_url" in proyectos_cols:
+                target = "afc6bad271d4"
+            elif "departamento" in proyectos_cols:
+                target = "ceaef9f9f5ab"
+            elif "tipo_inmueble" in proyectos_cols:
+                target = "206f47b901bb"
+            elif "proyecto_id" in tipos_cols:
+                target = "adaffcf1a2c1"
+            elif "compradores" in tables:
+                target = "b73c558ea786"
+                
+            out += f"Legacy database detected! Stamping schema at matched version ({target})...\n"
+            stamp_res = subprocess.run(["alembic", "stamp", target], capture_output=True, text=True, check=True)
             out += stamp_res.stdout + "\n"
         
         out += "Starting Alembic migrations upgrades...\n"
