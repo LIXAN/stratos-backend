@@ -64,20 +64,27 @@ from fastapi.responses import PlainTextResponse
 @app.get("/run-migrations", response_class=PlainTextResponse)
 def trigger_migrations():
     import subprocess
+    from database import engine
+    from sqlalchemy import text
     try:
-        out = ""
-        out += "Syncing production database state (stamping 858cb3bd6a96)...\n"
-        stamp_res = subprocess.run(["alembic", "stamp", "858cb3bd6a96"], capture_output=True, text=True, check=True)
-        out += stamp_res.stdout + "\n"
+        out = "Forcing DB sync via raw SQL (IF NOT EXISTS)...\n"
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE proyectos ADD COLUMN IF NOT EXISTS telefono_contacto VARCHAR"))
+            conn.execute(text("ALTER TABLE proyectos ADD COLUMN IF NOT EXISTS correo_contacto VARCHAR"))
+            conn.execute(text("ALTER TABLE proyectos ADD COLUMN IF NOT EXISTS direccion VARCHAR"))
+            conn.execute(text("CREATE TABLE IF NOT EXISTS zona_social_opcion (id UUID PRIMARY KEY, nombre VARCHAR NOT NULL UNIQUE)"))
+            conn.execute(text("ALTER TABLE tipos_plantilla ADD COLUMN IF NOT EXISTS imagen_url VARCHAR"))
+            out += "Cols & tables ensured successfully.\n"
         
-        out += "Starting Alembic upgrades (adding missing project contact/address columns)...\n"
-        result = subprocess.run(["alembic", "upgrade", "head"], capture_output=True, text=True, check=True)
-        out += result.stdout + "\n"
+        out += "Stamping Alembic to head to formalize these changes...\n"
+        stamp_res = subprocess.run(["alembic", "stamp", "head"], capture_output=True, text=True, check=True)
+        out += stamp_res.stdout + "\n"
         return "SUCCESS:\n" + out
     except subprocess.CalledProcessError as e:
-        return "ERROR:\n" + e.stdout + "\nSTDERR:\n" + e.stderr
+        return "ERROR AL STAMPAR:\n" + e.stdout + "\nSTDERR:\n" + e.stderr
     except Exception as e:
-        return f"UNEXPECTED ERROR:\n{str(e)}"
+        import traceback
+        return "UNEXPECTED ERROR:\n" + str(e) + "\n" + traceback.format_exc()
         
 @app.get("/")
 def read_root():
