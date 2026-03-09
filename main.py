@@ -65,9 +65,23 @@ from fastapi.responses import PlainTextResponse
 def trigger_migrations():
     import subprocess
     try:
-        print("Starting Alembic migrations locally via subprocess...")
+        from database import engine
+        from sqlalchemy import inspect
+        
+        inspector = inspect(engine)
+        tables = inspector.get_table_names()
+        
+        # Si la tabla de proyectos/tipos existe pero no hay historial de alembic,
+        # significa que la BD es vieja y necesitamos sellarla en la versión inicial.
+        out = ""
+        if "tipos_plantilla" in tables and "alembic_version" not in tables:
+            out += "Legacy database detected! Stamping initial schema (1be94bebf9c4)...\n"
+            stamp_res = subprocess.run(["alembic", "stamp", "1be94bebf9c4"], capture_output=True, text=True, check=True)
+            out += stamp_res.stdout + "\n"
+        
+        out += "Starting Alembic migrations upgrades...\n"
         result = subprocess.run(["alembic", "upgrade", "head"], capture_output=True, text=True, check=True)
-        return "SUCCESS:\n" + result.stdout
+        return "SUCCESS:\n" + out + result.stdout
     except subprocess.CalledProcessError as e:
         return "ERROR:\n" + e.stdout + "\nSTDERR:\n" + e.stderr
     except Exception as e:
