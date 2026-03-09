@@ -11,6 +11,20 @@ app = FastAPI(
     version="1.0.0",
 )
 
+import subprocess
+import logging
+
+logger = logging.getLogger(__name__)
+
+@app.on_event("startup")
+def run_migrations():
+    try:
+        logger.info("Running Alembic migrations on startup...")
+        subprocess.run(["alembic", "upgrade", "head"], check=True)
+        logger.info("Alembic migrations successful.")
+    except Exception as e:
+        logger.error(f"Error running migrations: {e}")
+
 # Serve uploaded files
 import os
 os.makedirs("uploads", exist_ok=True)
