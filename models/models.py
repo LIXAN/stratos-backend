@@ -144,15 +144,28 @@ class EstadoEmpleado(enum.Enum):
     activo = "activo"
     inactivo = "inactivo"
 
+class ModalidadTrabajo(enum.Enum):
+    presencial = "presencial"
+    remoto = "remoto"
+    hibrido = "hibrido"
+
+class Cargo(BaseModel):
+    __tablename__ = "cargos"
+    nombre = Column(String, unique=True, nullable=False)
+    descripcion = Column(String, nullable=True)
+
 class Empleado(BaseModel):
     __tablename__ = "empleados"
     nombre_completo = Column(String, nullable=False)
     documento_identidad = Column(String, nullable=True)
-    cargo = Column(String, nullable=False)
+    cargo_id = Column(UUID(as_uuid=True), ForeignKey("cargos.id"), nullable=True)
     telefono = Column(String, nullable=True)
     fecha_contratacion = Column(DateTime, nullable=True)
     salario = Column(Float, nullable=True)
     estado = Column(Enum(EstadoEmpleado), default=EstadoEmpleado.activo)
+    modalidad = Column(Enum(ModalidadTrabajo), nullable=True)
+    rol = Column(Enum(RolUsuario), nullable=True)
     usuario_id = Column(UUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=True)
     
     usuario = relationship("Usuario")
+    cargo = relationship("Cargo")
