@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import Optional, List, Any, Dict
 from uuid import UUID
 from datetime import datetime
-from models.models import EstadoApartamento
+from models.models import EstadoApartamento, EstadoCredito
 
 class ZonaSocialOpcionBase(BaseModel):
     nombre: str
@@ -98,17 +98,27 @@ class ApartamentoBase(BaseModel):
     tipo_id: UUID
     piso_id: UUID
     asesor_id: Optional[UUID] = None
-    comprador_id: Optional[UUID] = None
+    cliente_id: Optional[UUID] = None
+
+class AsesorBasico(BaseModel):
+    id: UUID
+    nombre_completo: str
+    email: str
+
+    class Config:
+        from_attributes = True
 
 class ApartamentoOut(ApartamentoBase):
     id: UUID
+    cliente: Optional['ClienteOut'] = None
+    asesor: Optional[AsesorBasico] = None
 
     class Config:
         from_attributes = True
 
 class ApartamentoReservar(BaseModel):
     asesor_id: UUID
-    comprador_id: UUID
+    cliente_id: UUID
 
 class ApartamentoTipoCreate(BaseModel):
     tipo_id: UUID
@@ -127,6 +137,7 @@ class PisoCreate(BaseModel):
 class PisoOut(PisoBase):
     id: UUID
     torre_id: UUID
+    apartamentos: List[ApartamentoOut] = []
     created_at: datetime
     updated_at: datetime
     
@@ -151,3 +162,30 @@ class PisoUpdate(BaseModel):
     numero_nivel: Optional[int] = None
     zona_social: Optional[List[str]] = None
     apartamentos_tipos: Optional[List[ApartamentoTipoCreate]] = None
+
+class ClienteBase(BaseModel):
+    nombre: str
+    email: Optional[str] = None
+    telefono: Optional[str] = None
+    documento_identidad: Optional[str] = None
+    entidad_financiera: Optional[str] = None
+    estado_credito: Optional[EstadoCredito] = None
+
+class ClienteCreate(ClienteBase):
+    pass
+
+class ClienteUpdate(BaseModel):
+    nombre: Optional[str] = None
+    email: Optional[str] = None
+    telefono: Optional[str] = None
+    documento_identidad: Optional[str] = None
+    entidad_financiera: Optional[str] = None
+    estado_credito: Optional[EstadoCredito] = None
+
+class ClienteOut(ClienteBase):
+    id: UUID
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        from_attributes = True

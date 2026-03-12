@@ -23,7 +23,7 @@ def reservar_apartamento(apto_id: UUID, data: ApartamentoReservar, db: Session =
         raise HTTPException(status_code=404, detail="Apartamento no encontrado")
         
     try:
-        apto.reservar(asesor_id=data.asesor_id, comprador_id=data.comprador_id)
+        apto.reservar(asesor_id=data.asesor_id, cliente_id=data.cliente_id)
         db.commit()
         db.refresh(apto)
         return apto

@@ -1,3 +1,4 @@
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 import os
 import shutil
 import boto3
@@ -124,6 +125,13 @@ def get_proyecto(proyecto_id: uuid.UUID, db: Session = Depends(get_db), current_
     if not proyecto:
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
     return proyecto
+
+@router.get("/{proyecto_id}/disponibilidad", response_model=List[TorreConPisosOut])
+def get_proyecto_disponibilidad(proyecto_id: uuid.UUID, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
+    proyecto = db.query(Proyecto).filter(Proyecto.id == proyecto_id).first()
+    if not proyecto:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    return proyecto.torres
 
 @router.put("/{proyecto_id}", response_model=ProyectoOut)
 def update_proyecto(proyecto_id: uuid.UUID, proyecto_update: ProyectoUpdate, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):

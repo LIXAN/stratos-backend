@@ -49,12 +49,13 @@ app.add_middleware(
 )
 
 # --- IMPORTACIÓN DE ROUTERS ---
-from routers import auth_router, proyectos_router, apartamentos_router, rrhh_router
+from routers import auth_router, proyectos_router, apartamentos_router, rrhh_router, clientes_router
 
 app.include_router(auth_router.router)
 app.include_router(proyectos_router.router)
 app.include_router(apartamentos_router.router)
 app.include_router(rrhh_router.router)
+app.include_router(clientes_router.router)
 
 # --- ENDPOINTS DE CONTROL ---
 

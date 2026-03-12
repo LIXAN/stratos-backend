@@ -37,10 +37,12 @@ class Usuario(BaseModel):
     rol = Column(Enum(RolUsuario), nullable=False)
     nombre_completo = Column(String, nullable=False)
 
-class Comprador(BaseModel):
-    __tablename__ = "compradores"
+class Cliente(BaseModel):
+    __tablename__ = "clientes"
     nombre = Column(String, nullable=False)
-    email = Column(String, unique=True, index=True, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=True)
+    telefono = Column(String, nullable=True)
+    documento_identidad = Column(String, nullable=True)
     entidad_financiera = Column(String, nullable=True)
     estado_credito = Column(Enum(EstadoCredito), nullable=True)
 
@@ -116,19 +118,19 @@ class Apartamento(BaseModel):
     tipo_id = Column(UUID(as_uuid=True), ForeignKey("tipos_plantilla.id"))
     piso_id = Column(UUID(as_uuid=True), ForeignKey("pisos.id"))
     asesor_id = Column(UUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=True)
-    comprador_id = Column(UUID(as_uuid=True), ForeignKey("compradores.id"), nullable=True)
+    cliente_id = Column(UUID(as_uuid=True), ForeignKey("clientes.id"), nullable=True)
     
     tipo = relationship("TipoPlantilla")
     piso = relationship("Piso", back_populates="apartamentos")
     asesor = relationship("Usuario", foreign_keys=[asesor_id])
-    comprador = relationship("Comprador")
+    cliente = relationship("Cliente")
 
-    def reservar(self, asesor_id: uuid.UUID, comprador_id: uuid.UUID):
+    def reservar(self, asesor_id: uuid.UUID, cliente_id: uuid.UUID):
         if self.estado != EstadoApartamento.disponible:
             raise ValueError("Apartamento no está disponible")
         self.estado = EstadoApartamento.reservado
         self.asesor_id = asesor_id
-        self.comprador_id = comprador_id
+        self.cliente_id = cliente_id
 
     def vender(self):
         if self.estado != EstadoApartamento.reservado:
@@ -138,7 +140,7 @@ class Apartamento(BaseModel):
     def liberar(self):
         self.estado = EstadoApartamento.disponible
         self.asesor_id = None
-        self.comprador_id = None
+        self.cliente_id = None
 
 class EstadoEmpleado(enum.Enum):
     activo = "activo"
